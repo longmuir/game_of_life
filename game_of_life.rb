@@ -20,13 +20,35 @@
 
 require 'matrix'
 
-class Grid
+class GameOfLife
   attr_accessor :grid, :columns, :rows
 
-  def initialize(rows, columns)
-    @rows = rows
-    @columns = columns
-    @grid = Array.new(rows) { Array.new(columns, 0) }
+  def initialize(input_grid)
+    @rows = input_grid.size
+    @columns = input_grid[0].size
+    @grid = input_grid
+  end
+
+  def getNext
+    new_grid = @grid.map.with_index do |row, row_index|
+               row.map.with_index do |cell, col_index| 
+                 cell = evaluateCell(cell, row_index, col_index)
+              end
+            end
+     new_grid
+  end
+
+  def evaluateCell(state, row, column)
+    new_state = 0
+    neighbours = getNeighbourCountForCell(row, column)
+    if neighbours == 3 or ( state == 1 and neighbours == 2 )
+      new_state = 1
+    end
+    new_state
+  end
+
+  def deadCellShouldComeAlive (state, neighbours)
+     ( state == 0 and neighbours == 2 )
   end
 
   def makeCellLive(row, column)
@@ -116,24 +138,6 @@ class Grid
   end
 
 
-end
-
-
-class GameOfLife
-
-  attr_accessor :input_grid, :output_grid
-
-  def initialize(input_grid)
-    @input_grid = input_grid
-    @output_grid = []
-  end
-
-  def getNext
-    if @input_grid.size == 1 
-      @output_grid = [0]
-    end
-    @output_grid
-  end
 
 end
 
