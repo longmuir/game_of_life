@@ -1,155 +1,84 @@
 require_relative 'game_of_life'
 require 'test/unit'
+require 'set'
 
 class GameOfLifeTest < Test::Unit::TestCase
 
-  def makeGrid(rows, columns)
-    Array.new(rows) { Array.new(columns, 0) }
+  def test_one_dead_cell_stays_alive
+    game = GameOfLife.new(Set[])
+    assert_equal Set[], game.get_next()
   end
 
-
-  def test_OneDeadCellStaysDead
-    input_game = [[0]]
-    output_game = GameOfLife.new(input_game).getNext
-    assert_equal output_game, [[0]]
+  def test_one_live_cell_dies
+    game = GameOfLife.new(Set[[1,1]])
+    assert_equal Set[], game.get_next()
   end
 
-  def test_OneLiveCellDies
-    input_game = [[0]]
-    output_game = GameOfLife.new(input_game).getNext
-    assert_equal output_game, [[0]]
+  #Any live cell with two or 3 neighbours stays alive
+  def test_stable_four_stays_alive
+    stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
+    game = GameOfLife.new(stable_four)
+    assert_equal  stable_four, game.get_next()
   end
 
   #Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
-  def test_3x3game_LessThanTwoNeighbourDies
-    input_game = [[0,1,0],
-                  [0,1,0],
-                  [0,0,0]]
-    expected_game = [[0,0,0],
-                     [0,0,0],
-                     [0,0,0]]
-    output_game = GameOfLife.new(input_game).getNext
-    assert_equal  expected_game, output_game
+  def test_less_than_two_neighbours_dies
+    game = GameOfLife.new(Set[[1,0], [1,1]])
+    assert_equal  Set[], game.get_next()
   end
 
-   #Any dead cell with exactly three live neighbours becomes a live cell.
-  def test_2x2game_Exactly3NeighboursComesAlive
-    input_game = [[1,1],
-                  [1,0]]
-    expected_game = [[1,1],
-                     [1,1]]
-    output_game = GameOfLife.new(input_game).getNext
-    assert_equal  expected_game, output_game
-  end
-
-     #Any dead cell with exactly three live neighbours becomes a live cell.
-  def test_2x2game_Exactly2NeighboursStaysAlive
-    input_game = [[1,1],
-                  [0,1]]
-    expected_game = [[1,1],
-                     [1,1]]
-    output_game = GameOfLife.new(input_game).getNext
-    assert_equal  expected_game, output_game
-  end
-
-  #Any live cell with more than three live neighbours dies, as if by overcrowding.
-  def test_2x2game_MoreThan3NeighboursDies
-    input_game = [[1,1,0],
-                  [1,1,0],
-                  [1,0,0]]
-    expected_game = [[1,1,0],
-                     [0,0,0],
-                     [1,1,0]]
-    output_game = GameOfLife.new(input_game).getNext
-    assert_equal  expected_game, output_game
-  end
-
-  def 
-
-  #Internal method tests
-
-  def test_getNeighbourCountForCell_OneCell
-    game = GameOfLife.new makeGrid(1,1)
-    assert_equal 0, game.getNeighbourCountForCell(1,1)
-  end
-
-  def test_getNeighbourCountForCell_OneCell
-    game = GameOfLife.new makeGrid(1,1)
-    assert_equal 0, game.getNeighbourCountForCell(0,0)
-  end
-
-  def test_getNeighbourCountForCell_3x3_middle_3corners
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(0,0)
-    game.makeCellLive(2,2)
-    game.makeCellLive(0,2)
-    assert_equal 3, game.getNeighbourCountForCell(1,1)
-  end
-
-  def test_getNeighbourCountForCell_3x3_toprightedge_1corner
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(0,0)
-  end
-
-  def test_getNeighbourCountForCell_3x3_bottomrightedge_1corner
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(2,0)
-  end
-
-  def test_getNeighbourCountForCell_3x3_topleftedge_1corner
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(2,2)
-  end
-
-  def test_getNeighbourCountForCell_3x3_bottomleftedge_1corner
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(0,2)
-  end
-
-  def test_getNeighbourCountForCell_3x3_topedge
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(0,1)
-  end
-
-  def test_getNeighbourCountForCell_3x3_bottomedge
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(2,1)
-  end
-
-  def test_getNeighbourCountForCell_3x3_leftedge
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(1,1)    
-    assert_equal 1, game.getNeighbourCountForCell(1,0)
-  end
-
-   def test_getNeighbourCountForTopRow_3x3_allsides
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(0,0)
-    game.makeCellLive(0,1)
-    game.makeCellLive(0,2)        
-    assert_equal 3, game.getNeighbourCountForCell(1,1)
-  end
-
-  def test_getNeighbourCountForCell_3x3_allsides
-    game = GameOfLife.new makeGrid(3,3)
-    game.makeCellLive(0,0)
-    game.makeCellLive(0,1)
-    game.makeCellLive(0,2)
-    game.makeCellLive(1,0) 
-    game.makeCellLive(1,2) 
-    game.makeCellLive(2,0)  
-    game.makeCellLive(2,1)  
-    game.makeCellLive(2,2)        
-    assert_equal 8, game.getNeighbourCountForCell(1,1)
+  #3 live neghbours provides a birth
+  def test_empty_cell_three_neighbours_birth_happens
+    pre_birth_set = Set[[0,1], [1,0], [1,1]]
+    post_birth_set = Set[[0,0],[0,1], [1,0], [1,1]]
+    game = GameOfLife.new(pre_birth_set)
+    assert_equal post_birth_set, game.get_next()
   end
 
 
+  def test_get_births_none
+    game = GameOfLife.new(Set[])
+    assert_equal Set[], game.get_births()
+  end
+
+  def test_get_births_one
+    game = GameOfLife.new( Set[[0,1], [1,0], [1,1]])
+    assert_equal Set[[0,0]], game.get_births()
+  end
+
+  def test_get_cells_with_neighbours_none
+    game = GameOfLife.new(Set[])
+    assert_equal Set[], game.get_cells_with_neighbours()
+  end
+
+  def test_get_cells_with_neighbours_8
+    game = GameOfLife.new(Set[[1,1]])
+    assert_equal Set[[0,0],[0,1],[0,2],
+                     [1,0],      [1,2],
+                     [2,0],[2,1],[2,2]], game.get_cells_with_neighbours()
+  end
+
+  def test_get_live_neighbours_for_cell_empty
+    game = GameOfLife.new(Set[])
+    assert_equal Set[], game.get_live_neighbours_for_cell([1,1])
+  end
+
+  def test_get_neighbours_for_cell_stable4
+    stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
+    game = GameOfLife.new(stable_four)
+    assert_equal Set[[1,2], [2,1], [2,2]], game.get_live_neighbours_for_cell([1,1])
+  end
+
+  def test_get_survivors_all_die
+    game = GameOfLife.new(Set[[1,1]])
+    assert_equal Set[], game.get_survivors
+  end
+
+  def test_get_survivors_stable_four_stays_alive
+    stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
+    game = GameOfLife.new(stable_four)
+    assert_equal stable_four, game.get_survivors
+  end
 
 
 end

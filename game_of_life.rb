@@ -23,120 +23,62 @@ require 'matrix'
 class GameOfLife
   attr_accessor :grid, :columns, :rows
 
-  def initialize(input_grid)
-    @rows = input_grid.size
-    @columns = input_grid[0].size
-    @grid = input_grid
+  def initialize(live_cells)
+    @live_cells = live_cells
   end
 
-  def getNext
-    new_grid = @grid.map.with_index do |row, row_index|
-               row.map.with_index do |cell, col_index| 
-                 cell = evaluateCell(cell, row_index, col_index)
-              end
-            end
-     new_grid
+  def get_next
+    new_live_cells = get_survivors + get_births
+    @live_cells = new_live_cells
   end
 
-  def evaluateCell(state, row, column)
-    new_state = 0
-    neighbours = getNeighbourCountForCell(row, column)
-    if neighbours == 3 or ( state == 1 and neighbours == 2 )
-      new_state = 1
+   def get_births
+    births = Set[]
+    empty_cells_with_neighbours = get_cells_with_neighbours - @live_cells
+    empty_cells_with_neighbours.each do |candidate_cell|
+      if get_live_neighbours_for_cell(candidate_cell).size == 3
+        births.add(candidate_cell)
+      end
     end
-    new_state
+    births
+   end
+
+  def get_cells_with_neighbours
+    cells_with_neighbours = Set[]
+    @live_cells.each do |cell|
+      cells_with_neighbours+=get_neighbours_for_cell(cell)
+    end
+    cells_with_neighbours
   end
 
-  def deadCellShouldComeAlive (state, neighbours)
-     ( state == 0 and neighbours == 2 )
+  def get_survivors
+    survivors = Set[]
+
+    @live_cells.each do |cell|
+      neighbour_count = get_live_neighbours_for_cell(cell).size
+      if  neighbour_count == 2 or neighbour_count == 3 
+        survivors.add([cell[0],cell[1]])
+      end
+    end
+
+    survivors
   end
 
-  def makeCellLive(row, column)
-    self.grid[row][column]  = 1
-  end
-
-  #should this method be in this class?
-  def getNeighbourCountForCell(row, column)
-    neighbours = 0
-    #This block could be improved a lot with the methods.
-    neighbours += top_right_neighbour(row, column)
-    neighbours += top_left_neighbour(row, column)
-    neighbours += bottom_right_neighbour(row, column)
-    neighbours += bottom_left_neighbour(row, column)
-    neighbours += bottom(row, column)
-    neighbours += top(row, column)
-    neighbours += left(row, column)
-    neighbours += right(row, column)
+  def get_neighbours_for_cell(cell)
+    neighbour_deltas = Set[[1, -1], [1, 0], [1, 1],
+                           [0, -1],         [0, 1],
+                           [-1,-1], [-1,0], [-1,1]]
+    neighbours = Set[]
+    neighbour_deltas.each do |cell_delta|
+      neighbours.add([cell_delta[0]+cell[0],cell_delta[1]+cell[1]])
+    end
     neighbours
   end
 
-#These methods could be improved a lot... lots of duplication
-
-  def bottom(row, column)
-    if (row+1 < self.rows)
-      return self.grid[row+1][column]
-    else
-      return 0
-    end
+  def get_live_neighbours_for_cell(cell)
+    potential_neighbours = get_neighbours_for_cell(cell)
+    potential_neighbours & @live_cells
   end
-
-  def top(row, column)
-    if (row > 0)
-      return self.grid[row-1][column]
-    else
-      return 0
-    end
-  end
-
-  def left(row, column)
-    if (column > 0)
-      return self.grid[row][column-1]
-    else
-      return 0
-    end
-  end
-
-  def right(row, column)
-    if (column+1 < self.columns)
-      return self.grid[row][column+1]
-    else
-      return 0
-    end
-  end
-
-
-  def top_right_neighbour(row, column)
-    if(row != 0 and column+1 < self.columns)
-      return self.grid[row-1][column+1]
-    else 
-      return 0
-    end
-  end
-
-  def top_left_neighbour(row, column)
-    if(row+1 < self.rows and column+1 < self.columns)
-      return self.grid[row+1][column+1]
-    else 
-      return 0
-    end
-  end
-
-  def bottom_right_neighbour(row, column)
-    if(row != 0 and column != 0)
-      return self.grid[row-1][column-1]
-    else 
-      return 0
-    end
-  end
-
-  def bottom_left_neighbour(row, column)
-    if(row +1 < self.rows and column != 0)
-      return self.grid[row+1][column-1]
-    else 
-      return 0
-    end
-  end
-
 
 
 end
