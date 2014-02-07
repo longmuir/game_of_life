@@ -18,18 +18,24 @@
 #    a=end
 #  live cell.
 
-require 'matrix'
+require 'set'
 
 class GameOfLife
   attr_accessor :grid, :columns, :rows
 
-  def initialize(live_cells)
+  def initialize(rows, columns, live_cells)
     @live_cells = live_cells
+    @rows = rows
+    @columns = columns
   end
 
   def get_next
     new_live_cells = get_survivors + get_births
     @live_cells = new_live_cells
+  end
+
+  def cell_is_alive?(cell)
+    @live_cells.include?(cell)
   end
 
    def get_births
@@ -70,7 +76,8 @@ class GameOfLife
                            [-1,-1], [-1,0], [-1,1]]
     neighbours = Set[]
     neighbour_deltas.each do |cell_delta|
-      neighbours.add([cell_delta[0]+cell[0],cell_delta[1]+cell[1]])
+      potential_neighbour =[cell_delta[0]+cell[0],cell_delta[1]+cell[1]]
+      neighbours.add(potential_neighbour) unless off_the_map(potential_neighbour)
     end
     neighbours
   end
@@ -78,6 +85,13 @@ class GameOfLife
   def get_live_neighbours_for_cell(cell)
     potential_neighbours = get_neighbours_for_cell(cell)
     potential_neighbours & @live_cells
+  end
+
+  def off_the_map(cell)
+    return (cell[0] < 0 || 
+            cell[1] < 0 || 
+            cell[0] > @rows-1 ||
+            cell[1] > @columns-1)
   end
 
 
