@@ -20,8 +20,8 @@
 
 require 'set'
 
+#This code suffers from primitive obsession... cell, grid use primitive types
 class GameOfLife
-  attr_accessor :grid, :columns, :rows
 
   def initialize(rows, columns, live_cells)
     @live_cells = live_cells
@@ -39,52 +39,40 @@ class GameOfLife
   end
 
    def get_births
-    births = Set[]
-    empty_cells_with_neighbours = get_cells_with_neighbours - @live_cells
-    empty_cells_with_neighbours.each do |candidate_cell|
-      if get_live_neighbours_for_cell(candidate_cell).size == 3
-        births.add(candidate_cell)
-      end
+    births = get_empty_cells_with_neighbours.select do | candidate_cell |
+      get_live_neighbours_for_cell(candidate_cell).size == 3
     end
-    births
+    births.to_set
    end
 
-  def get_cells_with_neighbours
-    cells_with_neighbours = Set[]
-    @live_cells.each do |cell|
-      cells_with_neighbours+=get_neighbours_for_cell(cell)
+  def get_empty_cells_with_neighbours
+    @live_cells.reduce(Set[]) do |cells_with_neighbours, cell|
+      get_neighbours_for_cell(cell) - @live_cells
     end
-    cells_with_neighbours
   end
 
   def get_survivors
-    survivors = Set[]
-
-    @live_cells.each do |cell|
-      neighbour_count = get_live_neighbours_for_cell(cell).size
-      if  neighbour_count == 2 or neighbour_count == 3 
-        survivors.add([cell[0],cell[1]])
-      end
+    survivors = @live_cells.select do | cell | 
+      [2,3].include?(get_live_neighbours_for_cell(cell).size)
     end
-
-    survivors
+    survivors.to_set
   end
 
   def get_neighbours_for_cell(cell)
+    get_possible_neighbours_for_cell(cell).select { |cell| !off_the_map(cell) }.to_set
+  end
+
+  def get_possible_neighbours_for_cell(cell)
     neighbour_deltas = Set[[1, -1], [1, 0], [1, 1],
                            [0, -1],         [0, 1],
                            [-1,-1], [-1,0], [-1,1]]
-    neighbours = Set[]
-    neighbour_deltas.each do |cell_delta|
-      potential_neighbour =[cell_delta[0]+cell[0],cell_delta[1]+cell[1]]
-      neighbours.add(potential_neighbour) unless off_the_map(potential_neighbour)
-    end
-    neighbours
+
+    neighbour_deltas.map {|cell_delta| [cell_delta[0]+cell[0],cell_delta[1]+cell[1]] }
   end
 
+
   def get_live_neighbours_for_cell(cell)
-    potential_neighbours = get_neighbours_for_cell(cell)
-    potential_neighbours & @live_cells
+    get_neighbours_for_cell(cell) & @live_cells
   end
 
   def off_the_map(cell)
@@ -93,7 +81,6 @@ class GameOfLife
             cell[0] > @rows-1 ||
             cell[1] > @columns-1)
   end
-
 
 end
 

@@ -64,14 +64,14 @@ class GameOfLifeTest < Test::Unit::TestCase
 
   def test_get_cells_with_neighbours_none
     game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal Set[], game.get_cells_with_neighbours()
+    assert_equal Set[], game.get_empty_cells_with_neighbours()
   end
 
   def test_get_cells_with_neighbours_8
     game = make_new_4x4_game_with_live_cells(Set[[1,1]])
     assert_equal Set[[0,0],[0,1],[0,2],
                      [1,0],      [1,2],
-                     [2,0],[2,1],[2,2]], game.get_cells_with_neighbours()
+                     [2,0],[2,1],[2,2]], game.get_empty_cells_with_neighbours()
   end
 
   def test_get_live_neighbours_for_cell_empty
