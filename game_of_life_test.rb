@@ -2,24 +2,6 @@ require_relative 'game_of_life'
 require 'test/unit'
 require 'set'
 
-# class GameOfLifeInfiniteTest < Test::Unit::TestCase
-
-#   def make_new_infinite_game_with_live_cells(live_cells)
-#     GameOfLifeWithInfiniteSize.new(live_cells: live_cells)
-#   end
-
-#   def test_get_rows_none
-#     game = make_new_infinite_game_with_live_cells(Set[])
-#     assert_equal 0, game.row_count
-#   end
-
-#   def test_get_rows_one
-#     game = make_new_infinite_game_with_live_cells(Set[0,0])
-#     assert_equal 1, game.row_count
-#   end
-
-# end
-
 class GameOfLifeFixedSizeTest < Test::Unit::TestCase
 
   def make_new_4x4_game_with_live_cells(live_cells)
