@@ -1,6 +1,8 @@
-#My first attempt at the Game Of Life Kata - I will evolve this code 
-#over a few days.
-
+# The Game Of Life Kata - A code kata I'm using to learn some aspects of Ruby.  
+# Yes, this problem can be solved in fewer lines of code - aim here is for 
+# an elegant, easy to understand solution that uses some of the OO techniques
+# from Sandy Metz's POODR book. 
+#
 # Your task is to write a program to calculate the next
 # generation of Conway's game of life, given any starting
 # position. You start with a two dimensional grid of cells, 
@@ -20,62 +22,83 @@
 
 require 'set'
 
-#This code suffers from primitive obsession... cell, grid use primitive types
-class GameOfLife
+class GameOfLife < Set
 
-  def initialize(rows, columns, live_cells)
-    @live_cells = live_cells
-    @rows = rows
-    @columns = columns
+  def initialize(args)
+    super(args[:live_cells])
+    post_initialize(args)
+  end
+
+  def post_initialize(args)
+    nil
   end
 
   def get_next
-    new_live_cells = get_survivors + get_births
-    @live_cells = new_live_cells
+    replace(get_survivors + get_births)
   end
 
   def cell_is_alive?(cell)
-    @live_cells.include?(cell)
+    include?(cell)
   end
 
-   def get_births
-    births = get_empty_cells_with_neighbours.select do | candidate_cell |
-      get_live_neighbours_for_cell(candidate_cell).size == 3
+  def get_births
+    get_empty_cells_with_neighbours.select do | candidate_cell |
+      get_live_neighbours_count_for_cell(candidate_cell) == 3
     end
-    births.to_set
-   end
+  end
 
   def get_empty_cells_with_neighbours
-    @live_cells.reduce(Set[]) do |cells_with_neighbours, cell|
-      get_neighbours_for_cell(cell) - @live_cells
+    reduce(Set[]) do |cells_with_neighbours, cell|
+      cells_with_neighbours + get_neighbours_for_cell(cell) - self.to_a
     end
   end
 
   def get_survivors
-    survivors = @live_cells.select do | cell | 
-      [2,3].include?(get_live_neighbours_for_cell(cell).size)
+    select do | cell | 
+      [2,3].include?(get_live_neighbours_count_for_cell(cell))
     end
-    survivors.to_set
+  end
+
+  def get_live_neighbours_count_for_cell(cell)
+    (get_neighbours_for_cell(cell) & self.to_a).size
   end
 
   def get_neighbours_for_cell(cell)
-    get_possible_neighbours_for_cell(cell).select { |cell| !off_the_map(cell) }.to_set
+    neighbours = get_possible_neighbours_for_cell(cell).select { |cell| not off_the_map?(cell) }
   end
 
   def get_possible_neighbours_for_cell(cell)
-    neighbour_deltas = Set[[1, -1], [1, 0], [1, 1],
+    neighbour_offsets = Set[[1, -1], [1, 0], [1, 1],
                            [0, -1],         [0, 1],
                            [-1,-1], [-1,0], [-1,1]]
 
-    neighbour_deltas.map {|cell_delta| [cell_delta[0]+cell[0],cell_delta[1]+cell[1]] }
+    neighbour_offsets.map {|cell_offset| [cell_offset[0]+cell[0],cell_offset[1]+cell[1]] }
   end
 
-
-  def get_live_neighbours_for_cell(cell)
-    get_neighbours_for_cell(cell) & @live_cells
+  def off_the_map?(cell)
+    raise NotImplementedError, "This #{self.class} cannot respond to off_the_map?"
   end
 
-  def off_the_map(cell)
+end
+
+class GameOfLifeWithInfiniteSize < GameOfLife
+  def post_initialize(args)
+    @rows = args[:rows]
+    @columns = args[:columns]
+  end
+
+  def off_the_map?(cell)
+    return (cell[0] < 0 || cell[1] < 0)
+  end
+end
+
+class GameOfLifeWithFixedSize < GameOfLife
+  def post_initialize(args)
+    @rows = args[:rows]
+    @columns = args[:columns]
+  end
+ 
+  def off_the_map?(cell)
     return (cell[0] < 0 || 
             cell[1] < 0 || 
             cell[0] > @rows-1 ||
