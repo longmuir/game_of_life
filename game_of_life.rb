@@ -71,7 +71,6 @@ class GameOfLife < Set
     neighbour_offsets = Set[[1, -1], [1, 0], [1, 1],
                            [0, -1],         [0, 1],
                            [-1,-1], [-1,0], [-1,1]]
-
     neighbour_offsets.map {|cell_offset| [cell_offset[0]+cell[0],cell_offset[1]+cell[1]] }
   end
 
