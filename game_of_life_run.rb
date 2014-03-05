@@ -1,5 +1,4 @@
 require_relative 'game_of_life'
-puts "testing..."
 
 @rows = 20
 @columns = 20
@@ -15,12 +14,12 @@ count = 0
 loop do
   count+=1
   system("cls")
-  for x in 1..@rows
-    for y in 1..@columns
-      if @game.cell_is_alive?([x-1,y-1])  
+  for x in 0..@rows
+    for y in 0..@columns
+      if @game.cell_is_alive?([x,y])  
         print "*" 
       else
-        print "."
+        print " "
       end
     end
     print "\n"

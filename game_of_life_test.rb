@@ -22,8 +22,7 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
     assert_equal true, game.cell_is_alive?([1,1])
   end
 
-
-  def test_one_dead_cell_stays_alive
+  def test_all_dead_stays_dead
     game = make_new_4x4_game_with_live_cells(Set[])
     assert_equal Set[], game.get_next
   end
@@ -31,6 +30,11 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
   def test_one_live_cell_dies
     game = make_new_4x4_game_with_live_cells(Set[[1,1]])
     assert_equal Set[], game.get_next
+  end
+
+  def test_get_births_one
+    game = make_new_4x4_game_with_live_cells( Set[[0,0], [2,0], [0,2]])
+    assert_equal Set[[1,1]], game.get_next
   end
 
   #Any live cell with two or 3 neighbours stays alive
@@ -91,16 +95,6 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
 
   #Internal tests
 
-  def test_get_births_none
-    game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal [], game.get_births
-  end
-
-  def test_get_births_one
-    game = make_new_4x4_game_with_live_cells( Set[[0,1], [1,0], [1,1]])
-    assert_equal [[0,0]], game.get_births
-  end
-
   def test_get_cells_with_neighbours_none
     game = make_new_4x4_game_with_live_cells(Set[])
     assert_equal Set[], game.get_empty_cells_with_neighbours
@@ -111,11 +105,6 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
     assert_equal Set[[0,0],[0,1],[0,2],
                      [1,0],      [1,2],
                      [2,0],[2,1],[2,2]], game.get_empty_cells_with_neighbours
-  end
-
-  def test_get_live_neighbours_for_cell_empty
-    game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal 0, game.get_live_neighbours_count_for_cell([1,1])
   end
 
   def test_get_neighbours_for_cell_stable4
@@ -133,18 +122,5 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
     game = make_new_4x4_game_with_live_cells(Set[])
     assert_equal [[3,2],[2,2],[2,3]], game.get_neighbours_for_cell([3,3])
   end
-
-  def test_get_survivors_all_die
-    game = make_new_4x4_game_with_live_cells(Set[[1,1]])
-    assert_equal [], game.get_survivors
-  end
-
-  def test_get_survivors_stable_four_stays_alive
-    stable_four = [[1,1], [1,2], [2,1], [2,2]]
-    game = make_new_4x4_game_with_live_cells(stable_four)
-    assert_equal stable_four, game.get_survivors
-  end
-
-
 
 end
