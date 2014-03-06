@@ -8,23 +8,10 @@ class GameOfLifeTest < Test::Unit::TestCase
     GameOfLife.new(grid: FixedSizeGrid.new(rows: 4, columns: 4), live_cells: live_cells)
   end
 
-  def make_new_10x10_game_with_live_cells(live_cells)
-    GameOfLife.new(grid: FixedSizeGrid.new(rows: 10, columns: 10), live_cells: live_cells)
-  end
-
-  def test_cell_is_alive_negative
-    game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal false, game.cell_is_alive?([1,1])
-  end
-
-  def test_cell_is_alive_positive
+  def test_cell_is_alive
     game = make_new_4x4_game_with_live_cells(Set[[1,1]])
+    assert_equal false, game.cell_is_alive?([0,0])
     assert_equal true, game.cell_is_alive?([1,1])
-  end
-
-  def test_next_empty_stays_empty
-    game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal Set[], game.get_next
   end
 
   def test_next_one_live_cell_dies
@@ -37,20 +24,17 @@ class GameOfLifeTest < Test::Unit::TestCase
     assert_equal Set[[1,1]], game.get_next
   end
 
-  #Any live cell with two or 3 neighbours stays alive
+  def test_next_less_than_two_neighbours_dies
+    game = make_new_4x4_game_with_live_cells(Set[[1,0], [1,1]])
+    assert_equal  Set[], game.get_next()
+  end
+
   def test_next_stable_four_stays_alive
     stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
     game = make_new_4x4_game_with_live_cells(stable_four)
     assert_equal  stable_four, game.get_next
   end
 
-  #Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
-  def test_next_less_than_two_neighbours_dies
-    game = make_new_4x4_game_with_live_cells(Set[[1,0], [1,1]])
-    assert_equal  Set[], game.get_next()
-  end
-
-  #3 live neghbours provides a birth
   def test_nest_empty_cell_three_neighbours_birth_happens
     pre_birth_set = Set[[0,1], [1,0], [1,1]]
     post_birth_set = Set[[0,0],[0,1], [1,0], [1,1]]
@@ -65,6 +49,10 @@ class GameOfLifeTest < Test::Unit::TestCase
     assert_equal vertical_bar, game.get_next
     assert_equal horizontal_bar, game.get_next
     assert_equal vertical_bar, game.get_next
+  end
+
+  def make_new_10x10_game_with_live_cells(live_cells)
+    GameOfLife.new(grid: FixedSizeGrid.new(rows: 10, columns: 10), live_cells: live_cells)
   end
 
   def test_next_beehive_formation
@@ -94,7 +82,6 @@ class GameOfLifeTest < Test::Unit::TestCase
   end
 
   #Internal tests - should refactor or remove
-
   def test_get_live_neighbours_for_cell_stable4
     stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
     game = make_new_4x4_game_with_live_cells(stable_four)
