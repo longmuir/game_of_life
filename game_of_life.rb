@@ -26,19 +26,21 @@ class GameOfLife < Set
 
   def initialize(args)
     super(args[:live_cells])
-    post_initialize(args)
+    @grid = args[:grid]
   end
 
-  def post_initialize(args)
-    nil
+  def cell_is_alive?(cell)
+    include?(cell)
   end
 
   def get_next
     replace(get_survivors + get_births)
   end
 
-  def cell_is_alive?(cell)
-    include?(cell)
+  def get_survivors
+    select do | cell | 
+      [2,3].include?(get_live_neighbours_count_for_cell(cell))
+    end
   end
 
   def get_births
@@ -49,18 +51,24 @@ class GameOfLife < Set
 
   def get_empty_cells_with_neighbours
     reduce(Set[]) do |cells_with_neighbours, cell|
-      cells_with_neighbours + get_neighbours_for_cell(cell) - self.to_a
-    end
-  end
-
-  def get_survivors
-    select do | cell | 
-      [2,3].include?(get_live_neighbours_count_for_cell(cell))
+      cells_with_neighbours + @grid.get_neighbours_for_cell(cell) - self.to_a
     end
   end
 
   def get_live_neighbours_count_for_cell(cell)
-    (get_neighbours_for_cell(cell) & self.to_a).size
+    (@grid.get_neighbours_for_cell(cell) & self.to_a).size
+  end
+
+end
+
+class Grid
+
+  def initialize(args = {})
+    post_initialize(args)
+  end
+
+  def post_initialize(args = {})
+    nil
   end
 
   def get_neighbours_for_cell(cell)
@@ -80,19 +88,16 @@ class GameOfLife < Set
 
 end
 
-class GameOfLifeWithInfiniteSize < GameOfLife
-  def post_initialize(args)
-    @rows = args[:rows]
-    @columns = args[:columns]
-  end
+class InfiniteGrid < Grid
 
   def off_the_map?(cell)
     return (cell[0] < 0 || cell[1] < 0)
   end
+
 end
 
-class GameOfLifeWithFixedSize < GameOfLife
-  def post_initialize(args)
+class FixedSizeGrid < Grid
+  def post_initialize(args = {})
     @rows = args[:rows]
     @columns = args[:columns]
   end
@@ -103,6 +108,4 @@ class GameOfLifeWithFixedSize < GameOfLife
             cell[0] > @rows-1 ||
             cell[1] > @columns-1)
   end
-
 end
-

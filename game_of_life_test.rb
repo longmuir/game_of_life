@@ -2,14 +2,14 @@ require_relative 'game_of_life'
 require 'test/unit'
 require 'set'
 
-class GameOfLifeFixedSizeTest < Test::Unit::TestCase
+class GameOfLifeTest < Test::Unit::TestCase
 
   def make_new_4x4_game_with_live_cells(live_cells)
-    GameOfLifeWithFixedSize.new(rows: 4, columns: 4, live_cells: live_cells)
+    GameOfLife.new(grid: FixedSizeGrid.new(rows: 4, columns: 4), live_cells: live_cells)
   end
 
   def make_new_10x10_game_with_live_cells(live_cells)
-    GameOfLifeWithFixedSize.new(rows: 10, columns: 10, live_cells: live_cells)
+    GameOfLife.new(grid: FixedSizeGrid.new(rows: 10, columns: 10), live_cells: live_cells)
   end
 
   def test_cell_is_alive_negative
@@ -22,43 +22,43 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
     assert_equal true, game.cell_is_alive?([1,1])
   end
 
-  def test_all_dead_stays_dead
+  def test_next_empty_stays_empty
     game = make_new_4x4_game_with_live_cells(Set[])
     assert_equal Set[], game.get_next
   end
 
-  def test_one_live_cell_dies
+  def test_next_one_live_cell_dies
     game = make_new_4x4_game_with_live_cells(Set[[1,1]])
     assert_equal Set[], game.get_next
   end
 
-  def test_get_births_one
+  def test_next_one_cell_born_rest_die
     game = make_new_4x4_game_with_live_cells( Set[[0,0], [2,0], [0,2]])
     assert_equal Set[[1,1]], game.get_next
   end
 
   #Any live cell with two or 3 neighbours stays alive
-  def test_stable_four_stays_alive
+  def test_next_stable_four_stays_alive
     stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
     game = make_new_4x4_game_with_live_cells(stable_four)
     assert_equal  stable_four, game.get_next
   end
 
   #Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
-  def test_less_than_two_neighbours_dies
+  def test_next_less_than_two_neighbours_dies
     game = make_new_4x4_game_with_live_cells(Set[[1,0], [1,1]])
     assert_equal  Set[], game.get_next()
   end
 
   #3 live neghbours provides a birth
-  def test_empty_cell_three_neighbours_birth_happens
+  def test_nest_empty_cell_three_neighbours_birth_happens
     pre_birth_set = Set[[0,1], [1,0], [1,1]]
     post_birth_set = Set[[0,0],[0,1], [1,0], [1,1]]
     game = make_new_4x4_game_with_live_cells(pre_birth_set)
     assert_equal post_birth_set, game.get_next
   end
 
-  def test_blinker_formation
+  def test_next_blinker_formation
     horizontal_bar = Set[[1,0], [1,1], [1,2]]
     vertical_bar = Set[[0,1], [1,1], [2,1]]
     game = make_new_4x4_game_with_live_cells(horizontal_bar)
@@ -67,7 +67,7 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
     assert_equal vertical_bar, game.get_next
   end
 
-  def test_beehive_formation
+  def test_next_beehive_formation
     cells = Set[     [2,2], [2,3], 
                 [3,1],             [3,4],
                      [4,2], [4,3]]
@@ -76,7 +76,7 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
     assert_equal cells, game.get_next
   end
 
-  def test_glider_formation
+  def test_next_glider_formation
     start = Set[      [2,2], 
                            [3,3],
                [1,4],[2,4],[3,4]]
@@ -93,34 +93,64 @@ class GameOfLifeFixedSizeTest < Test::Unit::TestCase
 
   end
 
-  #Internal tests
+  #Internal tests - should refactor or remove
 
-  def test_get_cells_with_neighbours_none
+  def test_get_live_neighbours_for_cell_stable4
+    stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
+    game = make_new_4x4_game_with_live_cells(stable_four)
+    assert_equal 3, game.get_live_neighbours_count_for_cell([1,1])
+  end
+
+  def test_get_empty_cells_with_neighbours_none
     game = make_new_4x4_game_with_live_cells(Set[])
     assert_equal Set[], game.get_empty_cells_with_neighbours
   end
 
-  def test_get_cells_with_neighbours_8
+  def test_get_empty_cells_with_neighbours_8
     game = make_new_4x4_game_with_live_cells(Set[[1,1]])
     assert_equal Set[[0,0],[0,1],[0,2],
                      [1,0],      [1,2],
                      [2,0],[2,1],[2,2]], game.get_empty_cells_with_neighbours
   end
 
-  def test_get_neighbours_for_cell_stable4
-    stable_four = Set[[1,1], [1,2], [2,1], [2,2]]
-    game = make_new_4x4_game_with_live_cells(stable_four)
-    assert_equal 3, game.get_live_neighbours_count_for_cell([1,1])
+end
+
+class FixedSizeGridTest < Test::Unit::TestCase
+  def setup
+    @grid = FixedSizeGrid.new(rows:4, columns:4)
   end
 
   def test_get_neighbours_for_cell_top_edge
-    game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal [[1,0],[1,1],[0,1]], game.get_neighbours_for_cell([0,0])
+    assert_equal [[1,0],[1,1],[0,1]], @grid.get_neighbours_for_cell([0,0])
   end
 
   def test_get_neighbours_for_cell_bottom_left
-    game = make_new_4x4_game_with_live_cells(Set[])
-    assert_equal [[3,2],[2,2],[2,3]], game.get_neighbours_for_cell([3,3])
+    assert_equal [[3,2],[2,2],[2,3]], @grid.get_neighbours_for_cell([3,3])
   end
 
+  def test_off_the_map_is_true
+    assert_equal true, @grid.off_the_map?([-1,0]) 
+    assert_equal true, @grid.off_the_map?([4,4])
+  end
+
+  def test_off_the_map_is_false
+    assert_equal false, @grid.off_the_map?([0,0]) 
+    assert_equal false, @grid.off_the_map?([3,3])
+  end
+
+end
+
+class InfiniteGridTest < Test::Unit::TestCase
+  def setup
+    @grid = InfiniteGrid.new
+  end
+
+  def test_off_the_map_is_true
+    assert_equal true, @grid.off_the_map?([-1,0])
+  end
+
+  def test_off_the_map_is_false
+    assert_equal false, @grid.off_the_map?([0,0])
+    assert_equal false, @grid.off_the_map?([1000,1000])
+  end
 end

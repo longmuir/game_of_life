@@ -1,31 +1,27 @@
 require_relative 'game_of_life'
+require 'curses'
+include Curses
 
 @rows = 20
 @columns = 20
+@cells = Set[[2,2],  [3,3],  [4,1],[4,2],[4,3]]
+@game = GameOfLife.new(grid: FixedSizeGrid.new(rows: @rows, columns: @columns), live_cells: @cells)
+@iteration = 0
 
+init_screen
 
-@cells = Set[      [2,2], 
-                           [3,3],
-               [4,1],[4,2],[4,3]]
-
-@game = GameOfLifeWithFixedSize.new(rows: @rows, columns: @columns, live_cells: @cells)
-
-count = 0
 loop do
-  count+=1
-  system("cls")
-  for x in 0..@rows
-    for y in 0..@columns
-      if @game.cell_is_alive?([x,y])  
-        print "*" 
-      else
-        print " "
-      end
-    end
-    print "\n"
+  clear
+  @game.each do | cell |
+    setpos(cell[0],cell[1])
+    addstr "*" 
   end
-  puts "Time: #{count} Population: #{@game.count}"
-  puts "Press Ctrl+C to quit."
-  sleep(0.1)
+  setpos(lines-2,0)
+  nl
+  addstr "Time: #{@iteration} Population: #{@game.count}\n"
+  addstr "Press 'x' to quit, any other key to continue..."
+  refresh
+  exit if getch == "x"
   @game.get_next
+  @iteration+=1
 end
